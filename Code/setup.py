@@ -4,8 +4,9 @@ import time
 flag=0x00
 for x in range(1,4):
 	if os.system("sudo apt-get update") == 0:
-		flag=flag | 0x01
-		break
+		if os.system("sudo apt-get upgrade") == 0:
+			flag=flag | 0x01
+			break
 for x in range(1,4):
 	if os.system("sudo apt-get install -y i2c-tools") == 0:
 		flag=flag | 0x02

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import io
+import os
 import time
 import fcntl
 import socket
@@ -17,6 +18,7 @@ from Command import COMMAND as cmd
 
 class Server:
     def __init__(self):
+        
         self.tcp_flag=False
         self.led=Led()
         self.servo=Servo()
@@ -25,6 +27,7 @@ class Server:
         self.control=Control()
         self.sonic=Ultrasonic()
         self.control.Thread_conditiona.start()
+        self.battery_voltage=[8.4,8.4,8.4]
     def get_interface_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(s.fileno(),
@@ -80,7 +83,6 @@ class Server:
                 camera.framerate = 15               # 15 frames/sec
                 camera.saturation = 80              # Set image video saturation
                 camera.brightness = 50              # Set the brightness of the image (50 indicates the state of white balance)
-                time.sleep(2)                       # give 2 secs for camera to initilize
                 start = time.time()
                 stream = io.BytesIO()
                 # send jpeg format video stream
@@ -105,27 +107,28 @@ class Server:
             
     def measuring_voltage(self,connect):
         try:
-            data=round(self.adc.power(0),2)
-            command=cmd.CMD_POWER+'#'+str(data)+"\n"
+            self.battery_voltage[0]=round(self.adc.power(0),2)
+            self.battery_voltage[1]=round(self.adc.power(0),2)
+            self.battery_voltage[2]=round(self.adc.power(0),2)
+            command=cmd.CMD_POWER+'#'+str(max(self.battery_voltage))+"\n"
             self.send_data(connect,command)
             self.sednRelaxFlag()
+            self.battery_reminder()
         except Exception as e:
             print(e)
-    def measuring_distance(self,connect):
-        while True:
-            try:
-                command=cmd.CMD_SONIC+'#'+str(self.sonic.getDistance())+"\n"
-                self.send_data(connect,command)
-                time.sleep(0.05)
-            except Exception as e:
-                print(e)
-                break
-    
+    def battery_reminder(self):
+        if max(self.battery_voltage) < 6.4:
+            self.turn_off_server()
+            self.control.relax(True)
+            print("The batteries power are too low. Please recharge the batteries or replace batteries.")
+            print("Close the server")
+            os._exit(0)
     def sednRelaxFlag(self):
         if self.control.move_flag!=2:
             command=cmd.CMD_RELAX+"#"+str(self.control.move_flag)+"\n"
             self.send_data(self.connection1,command)
-            self.control.move_flag= 2        
+            self.control.move_flag= 2  
+                  
     def receive_instruction(self):
         try:
             self.connection1,self.client_address1 = self.server_socket1.accept()
@@ -139,7 +142,8 @@ class Server:
                 #print(allData)
             except:
                 if self.tcp_flag:
-                    self.reset_server()
+                    if max(self.battery_voltage) > 6.4:
+                        self.reset_server()
                     break
                 else:
                     break
@@ -176,27 +180,26 @@ class Server:
                 elif cmd.CMD_HEAD in data:
                     self.servo.setServoAngle(15,int(data[1]))
                 elif cmd.CMD_SONIC in data:
-                    if len(data) < 2:
-                        command=cmd.CMD_SONIC+'#'+str(self.sonic.getDistance())+"\n"
-                        self.send_data(self.connection1,command)
-                    else:
-                        if data[1]=="1":
-                            thread_sonic=threading.Thread(target=self.measuring_distance,args=(self.connection1,))
-                            thread_sonic.start()
-                        else:
-                            try:
-                                stop_thread(thread_sonic)
-                            except:
-                                pass
+                    command=cmd.CMD_SONIC+'#'+str(self.sonic.getDistance())+"\n"
+                    self.send_data(self.connection1,command)
                 elif cmd.CMD_POWER in data:
                     self.measuring_voltage(self.connection1)
+                elif cmd.CMD_WORKING_TIME in data: 
+                    if self.control.move_timeout!=0 and self.control.relax_flag==True:
+                        if self.control.move_count >180:
+                            command=cmd.CMD_WORKING_TIME+'#'+str(180)+'#'+str(round(self.control.move_count-180))+"\n"
+                        else:
+                            if self.control.move_count==0:
+                                command=cmd.CMD_WORKING_TIME+'#'+str(round(self.control.move_count))+'#'+str(round((time.time()-self.control.move_timeout)+60))+"\n"
+                            else:
+                                command=cmd.CMD_WORKING_TIME+'#'+str(round(self.control.move_count))+'#'+str(round(time.time()-self.control.move_timeout))+"\n"
+                    else:
+                        command=cmd.CMD_WORKING_TIME+'#'+str(round(self.control.move_count))+'#'+str(0)+"\n"
+                    self.send_data(self.connection1,command)
                 else:
                     self.control.order=data
                     self.control.timeout=time.time()
-        try:    
-            stop_thread(thread_sonic)
-        except:
-            pass
+
         try:    
             stop_thread(thread_power)
         except:
@@ -205,11 +208,8 @@ class Server:
             stop_thread(thread_led)
         except:
             pass
-        try:    
-            stop_thread(thread_relax)
-        except:
-            pass
         print("close_recv")
+        self.control.order[0]=cmd.CMD_RELAX
 
 if __name__ == '__main__':
     pass

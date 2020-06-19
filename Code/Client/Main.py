@@ -15,7 +15,6 @@ class MyWindow(QMainWindow,Ui_client):
         self.setWindowIcon(QIcon('Picture/logo_Mini.png'))
         self.Video.setScaledContents (True)
         self.Video.setPixmap(QPixmap('Picture/dog_client.png'))
-
         self.setFocusPolicy(Qt.StrongFocus)
         self.Key_W=False
         self.Key_A=False
@@ -30,7 +29,7 @@ class MyWindow(QMainWindow,Ui_client):
         file = open('IP.txt', 'r')
         self.lineEdit_IP_Adress.setText(str(file.readline()))
         file.close()
-        
+
         #ProgressBar
         self.progress_Power.setMinimum(0)
         self.progress_Power.setMaximum(100)
@@ -109,10 +108,15 @@ class MyWindow(QMainWindow,Ui_client):
         self.timer=QTimer(self)
         self.timer.timeout.connect(self.refresh_image)
 
-        self.time_out = QTimer(self)
-        self.time_out.timeout.connect(self.power)
+        self.timer_power = QTimer(self)
+        self.timer_power.timeout.connect(self.power)
+
+        self.timer_sonic = QTimer(self)
+        self.timer_sonic.timeout.connect(self.getSonicData)
 
         self.drawpoint=[585,135]
+        self.initial=True
+
     #keyboard
     def keyPressEvent(self, event):
         if(event.key() == Qt.Key_C):
@@ -145,7 +149,6 @@ class MyWindow(QMainWindow,Ui_client):
         if(event.key() == Qt.Key_M):
             print("M")
             self.showCalibrationWindow()
-            
 
         if event.isAutoRepeat():
             pass
@@ -228,7 +231,6 @@ class MyWindow(QMainWindow,Ui_client):
             qp.setPen(pen)
             qp.drawLine(self.drawpoint[0],35,self.drawpoint[0],235)
             qp.drawLine(485,self.drawpoint[1],685,self.drawpoint[1])
-
             self.label_point.move(self.drawpoint[0] + 10, self.drawpoint[1] + 10)
             pitch = round((self.drawpoint[1] - 135) / 100.0 * 20)
             yaw = round((self.drawpoint[0] - 585) / 100.0 * 20)
@@ -240,19 +242,20 @@ class MyWindow(QMainWindow,Ui_client):
             qp.end()
         except Exception as e:
             print(e)
-        
-    
+
+
     def mouseMoveEvent(self, event):
         x=event.pos().x()
         y=event.pos().y()
+        #print(x,y)
         if x > 485 and x < 685 and y > 35 and y < 235:
             try:
                 self.drawpoint[0]=x
                 self.drawpoint[1]=y
-                self.update()
+                #self.update()
+                self.repaint()
             except Exception as e:
                 print(e)
-        
 
     def mousePressEvent(self, event):
         x=event.pos().x()
@@ -261,19 +264,21 @@ class MyWindow(QMainWindow,Ui_client):
             try:
                 self.drawpoint[0]=x
                 self.drawpoint[1]=y
-                self.update()
+                #self.update()
+                self.repaint()
             except Exception as e:
                 print(e)
     
     def closeEvent(self,event):
         try:
-            self.time_out.stop()
+            self.timer_power.stop()
             self.timer.stop()
             stop_thread(self.video)
             stop_thread(self.instruction)
         except Exception as e:
             print(e)
         self.client.turn_off_client()
+        print("close")
         QCoreApplication.instance().quit()
         #os._exit(0)
 
@@ -284,6 +289,7 @@ class MyWindow(QMainWindow,Ui_client):
         else:
             self.timer.stop()
             self.Button_Video.setText('Open Video')
+
     def receive_instruction(self,ip):
         try:
             self.client.client_socket1.connect((ip,5001))
@@ -327,13 +333,16 @@ class MyWindow(QMainWindow,Ui_client):
 
 
     def refresh_image(self):
-        if self.client.video_flag == False:
-            height, width, bytesPerComponent=self.client.image.shape
-            #print (height, width, bytesPerComponent)
-            cv2.cvtColor(self.client.image, cv2.COLOR_BGR2RGB, self.client.image)
-            QImg = QImage(self.client.image.data, width, height, 3 * width, QImage.Format_RGB888)
-            self.Video.setPixmap(QPixmap.fromImage(QImg))
-            self.client.video_flag = True
+        try:
+            if self.client.video_flag == False:
+                height, width, bytesPerComponent=self.client.image.shape
+                #print (height, width, bytesPerComponent)
+                cv2.cvtColor(self.client.image, cv2.COLOR_BGR2RGB, self.client.image)
+                QImg = QImage(self.client.image.data, width, height, 3 * width, QImage.Format_RGB888)
+                self.Video.setPixmap(QPixmap.fromImage(QImg))
+                self.client.video_flag = True
+        except Exception as e:
+            print(e)
     #BALL
     def chase_ball_and_find_face(self):
         if self.Button_Ball_And_Face.text() == 'Face':
@@ -363,7 +372,7 @@ class MyWindow(QMainWindow,Ui_client):
             self.video.start() 
             self.instruction.start()
             self.Button_Connect.setText('Disconnect')
-            self.time_out.start(1000)
+            self.timer_power.start(1000)
         else:
             try:
                 stop_thread(self.video)
@@ -376,14 +385,21 @@ class MyWindow(QMainWindow,Ui_client):
             self.client.tcp_flag=False
             self.client.turn_off_client()
             self.Button_Connect.setText('Connect')
-            self.time_out.stop()
+            self.timer_power.stop()
 
     def stand(self):
+        self.initial=False
+        #self.drawpoint = [585, 135]
         self.Button_IMU.setText('Balance')
         self.slider_roll.setValue(0)
+        time.sleep(0.1)
         self.slider_pitch.setValue(0)
+        time.sleep(0.1)
         self.slider_yaw.setValue(0)
+        time.sleep(0.1)
         self.slider_horizon.setValue(0)
+        time.sleep(0.1)
+        self.initial = True
 
     #MOVE
     def stop(self):
@@ -469,16 +485,17 @@ class MyWindow(QMainWindow,Ui_client):
     #SNOIC
     def sonic(self):
         if self.Button_Sonic.text() == 'Sonic':
-            command=cmd.CMD_SONIC+'#1'+'\n'
-            self.client.send_data(command)
+            self.timer_sonic.start(100)
             self.Button_Sonic.setText('Close')
-            #print (command)
-        else:
-            command=cmd.CMD_SONIC+'#0'+'\n'
-            self.client.send_data(command)
-            self.Button_Sonic.setText('Sonic')
-            #print (command)
 
+        else:
+            self.timer_sonic.stop()
+            self.Button_Sonic.setText('Sonic')
+            #
+    def getSonicData(self):
+        command=cmd.CMD_SONIC+'\n'
+        self.client.send_data(command)
+        #print (command)
     #HEIGHT
     def height(self):
         try:
@@ -496,7 +513,8 @@ class MyWindow(QMainWindow,Ui_client):
             hor=str(self.slider_horizon.value())
             self.label_horizon.setText(hor)
             command=cmd.CMD_HORIZON+"#"+hor+'\n'
-            self.client.send_data(command)
+            if self.initial:
+                self.client.send_data(command)
             #print(command)
         except Exception as e:
             print(e)
@@ -518,6 +536,8 @@ class MyWindow(QMainWindow,Ui_client):
             command=cmd.CMD_POWER+'\n'
             self.client.send_data(command)
             #print (command)
+            command = "CMD_WORKING_TIME" + '\n'
+            self.client.send_data(command)
         except Exception as e:
             print(e)
 
@@ -527,14 +547,15 @@ class MyWindow(QMainWindow,Ui_client):
             r=str(self.slider_roll.value())
             p=str(self.slider_pitch.value())
             y=str(self.slider_yaw.value())
+            command = cmd.CMD_ATTITUDE + '#' + r + '#' + p + '#' + y + '\n'
+            if self.initial:
+                self.client.send_data(command)
             target1.setText(str(target2.value()))
             self.drawpoint[0]=585+self.slider_yaw.value()*5
             self.drawpoint[1]=135+self.slider_pitch.value()*5
-            self.update()
-            command=cmd.CMD_ATTITUDE+'#'+r+'#'+p+'#'+y+'\n'
-            self.client.send_data(command)
+            #self.update()
+            self.repaint()
             #print(command)
-
         except Exception as e:
             print(e)
         

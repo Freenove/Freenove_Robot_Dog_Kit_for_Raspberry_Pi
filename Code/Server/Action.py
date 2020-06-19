@@ -1,6 +1,6 @@
+import math
 from Control import *
 from Servo import *
-import math
 class Action:
     def __init__(self):
         self.servo=Servo()
@@ -19,7 +19,6 @@ class Action:
                 self.control.point[i][2]+=xyz[i][2]
             self.control.run()
             time.sleep(0.01)
-        
         for i in range(4):
             for i in range(50,120,1):
                 self.control.point[0][1]=i
@@ -56,7 +55,6 @@ class Action:
                 self.control.point[i][2]+=xyz[i][2]
             self.control.run()
             time.sleep(0.02)
-            
         x3=(80-self.control.point[3][0])/30
         y3=(23-self.control.point[3][1])/30
         z3=(0-self.control.point[3][2])/30
@@ -66,7 +64,6 @@ class Action:
             self.control.point[3][2]+=z3
             self.control.run()
             time.sleep(0.01)
-            
         for i in range(2):
             for i in range(92,120,1):
                 self.servo.setServoAngle(11,i)
@@ -77,7 +74,6 @@ class Action:
             for i in range(60,92,1):
                 self.servo.setServoAngle(11,i)
                 time.sleep(0.01)
-        
         xyz=[[55,78,0],[55,78,0],[55,78,0],[55,78,0]]
         for i in range(4):
             xyz[i][0]=(xyz[i][0]-self.control.point[i][0])/30
@@ -136,7 +132,7 @@ class Action:
         for i in range(10):
             self.control.setpLeft()
     def hand(self):
-        xyz=[[-20,120,-40],[50,105,0],[50,105,0],[-15,125,30]]
+        xyz=[[-20,120,-20],[50,105,0],[50,105,0],[-20,120,20]]
         for i in range(4):
             xyz[i][0]=(xyz[i][0]-self.control.point[i][0])/30
             xyz[i][1]=(xyz[i][1]-self.control.point[i][1])/30
@@ -152,17 +148,7 @@ class Action:
         for i in range(3):   
             x3=(100-self.control.point[3][0])/30
             y3=(40-self.control.point[3][1])/30
-            z3=(30-self.control.point[3][2])/30
-            for j in range(30):
-                self.control.point[3][0]+=x3
-                self.control.point[3][1]+=y3
-                self.control.point[3][2]+=z3
-                self.control.run()
-                time.sleep(0.001)
-        
-            x3=(-15-self.control.point[3][0])/30
-            y3=(125-self.control.point[3][1])/30
-            z3=(30-self.control.point[3][2])/30
+            z3=(10-self.control.point[3][2])/30
             for j in range(30):
                 self.control.point[3][0]+=x3
                 self.control.point[3][1]+=y3
@@ -170,19 +156,29 @@ class Action:
                 self.control.run()
                 time.sleep(0.001)
                 
+        
+            x3=(-20-self.control.point[3][0])/30
+            y3=(120-self.control.point[3][1])/30
+            z3=(20-self.control.point[3][2])/30
+            for j in range(30):
+                self.control.point[3][0]+=x3
+                self.control.point[3][1]+=y3
+                self.control.point[3][2]+=z3
+                self.control.run()
+                time.sleep(0.001)
+            
             x0=(100-self.control.point[0][0])/30
             y0=(40-self.control.point[0][1])/30
-            z0=(-40-self.control.point[0][2])/30
+            z0=(-10-self.control.point[0][2])/30
             for j in range(30):
                 self.control.point[0][0]+=x0
                 self.control.point[0][1]+=y0
                 self.control.point[0][2]+=z0
                 self.control.run()
                 time.sleep(0.001)
-         
             x0=(-20-self.control.point[0][0])/30
             y0=(120-self.control.point[0][1])/30
-            z0=(-40-self.control.point[0][2])/30
+            z0=(-20-self.control.point[0][2])/30
             for j in range(30):
                 self.control.point[0][0]+=x0
                 self.control.point[0][1]+=y0
@@ -202,7 +198,6 @@ class Action:
             self.control.run()
             time.sleep(0.02)
         
-
     def coquettish(self):
         xyz=[[80,80,0],[-30,120,0],[-30,120,0],[80,80,0]]
         for i in range(4):
@@ -244,8 +239,8 @@ class Action:
                 time.sleep(0.02)
                 
     def swim(self):
-        z=110*math.cos(45/180*math.pi)+23
-        x=110*math.sin(45/180*math.pi)
+        z=100*math.cos(45/180*math.pi)+23
+        x=100*math.sin(45/180*math.pi)
         xyz=[[-x,0,z],[-78,0,100],[-78,0,-100],[-x,0,-z]]
         for i in range(4):
             xyz[i][0]=(xyz[i][0]-self.control.point[i][0])/30
@@ -260,8 +255,8 @@ class Action:
             time.sleep(0.02)
         for i in range(3):
             for i in range(45,-45,-1):
-                z=110*math.cos(i/180*math.pi)+23
-                x=110*math.sin(i/180*math.pi)
+                z=100*math.cos(i/180*math.pi)+23
+                x=100*math.sin(i/180*math.pi)
                 xyz=[[-x,0,z],[-78,0,100],[-78,0,-100],[-x,0,-z]]
                 for i in range(4):
                     xyz[i][0]=(xyz[i][0]-self.control.point[i][0])
@@ -273,8 +268,8 @@ class Action:
                     self.control.point[i][2]+=xyz[i][2]
                 self.control.run()
             for i in range(-45,45,1):
-                z=110*math.cos(i/180*math.pi)+23
-                x=110*math.sin(i/180*math.pi)
+                z=100*math.cos(i/180*math.pi)+23
+                x=100*math.sin(i/180*math.pi)
                 xyz=[[-x,0,z],[-78,0,100],[-78,0,-100],[-x,0,-z]]
                 for i in range(4):
                     xyz[i][0]=(xyz[i][0]-self.control.point[i][0])
@@ -312,9 +307,10 @@ class Action:
                 self.control.point[i][2]+=xyz[i][2]
             self.control.run()
             time.sleep(0.02)
-        y=110*math.cos(45/180*math.pi)+23
-        x=110*math.sin(45/180*math.pi)
-        xyz=[[-x,y,0],[0,0,133],[0,0,-133],[-x,y,0]]
+            
+        y=100*math.cos(45/180*math.pi)+23
+        x=100*math.sin(45/180*math.pi)
+        xyz=[[-x,y,0],[0,0,123],[0,0,-123],[-x,y,0]]
         for i in range(4):
             xyz[i][0]=(xyz[i][0]-self.control.point[i][0])/30
             xyz[i][1]=(xyz[i][1]-self.control.point[i][1])/30
@@ -326,11 +322,12 @@ class Action:
                 self.control.point[i][2]+=xyz[i][2]
             self.control.run() 
             time.sleep(0.02)
+            
         for i in range(3):
             for i in range(45,-45,-1):
-                y=110*math.cos(i/180*math.pi)+23
-                x=110*math.sin(i/180*math.pi)
-                xyz=[[-x,y,0],[0,0,133],[0,0,-133],[-x,y,0]]
+                y=100*math.cos(i/180*math.pi)+23
+                x=100*math.sin(i/180*math.pi)
+                xyz=[[-x,y,0],[0,0,123],[0,0,-123],[-x,y,0]]
                 for i in range(4):
                     xyz[i][0]=(xyz[i][0]-self.control.point[i][0])
                     xyz[i][1]=(xyz[i][1]-self.control.point[i][1])
@@ -341,9 +338,9 @@ class Action:
                     self.control.point[i][2]+=xyz[i][2]
                 self.control.run() 
             for i in range(-45,45,1):
-                y=110*math.cos(i/180*math.pi)+23
-                x=110*math.sin(i/180*math.pi)
-                xyz=xyz=[[-x,y,0],[0,0,133],[0,0,-133],[-x,y,0]]
+                y=100*math.cos(i/180*math.pi)+23
+                x=100*math.sin(i/180*math.pi)
+                xyz=xyz=[[-x,y,0],[0,0,123],[0,0,-123],[-x,y,0]]
                 for i in range(4):
                     xyz[i][0]=(xyz[i][0]-self.control.point[i][0])
                     xyz[i][1]=(xyz[i][1]-self.control.point[i][1])
@@ -372,8 +369,8 @@ if __name__=='__main__':
     action=Action()  
     time.sleep(2) 
     while True:
-        action.push_ups()
-        #action.helloOne()
+        #action.push_ups()
+        action.helloOne()
         #action.hand()
         #action.coquettish() 
         #action.swim() 

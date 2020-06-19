@@ -18,7 +18,7 @@ class Ultrasonic:
         while GPIO.input(self.echo_pin) != value and count>0:
             count = count-1
     def getDistance(self):
-        distance_cm=[0,0,0,0,0]
+        distance_cm=[0,0,0]
         for i in range(3):
             self.send_trigger_pulse()
             self.wait_for_echo(True,10000)
@@ -28,10 +28,10 @@ class Ultrasonic:
             pulse_len = finish-start
             distance_cm[i] = pulse_len/0.000058
         distance_cm=sorted(distance_cm)
-        return int(distance_cm[2])
+        return int(distance_cm[1])
         
-            
 # Main program logic follows:
 if __name__ == '__main__':
     pass
+        
 
