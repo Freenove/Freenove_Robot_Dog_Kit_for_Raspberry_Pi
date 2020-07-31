@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-import sys
 from ui_led import Ui_led
+from ui_face import Ui_Face
 from ui_client import Ui_client
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import *
@@ -44,6 +44,7 @@ class MyWindow(QMainWindow,Ui_client):
         self.Button_LED.clicked.connect(self.showLedWindow)
         self.Button_Sonic.clicked.connect(self.sonic)
         self.Button_Relax.clicked.connect(self.relax)
+        self.Button_Face_ID.clicked.connect(self.showFaceWindow)
         
         self.Button_ForWard.pressed.connect(self.forward)
         self.Button_ForWard.released.connect(self.stop)
@@ -125,7 +126,7 @@ class MyWindow(QMainWindow,Ui_client):
         if(event.key() == Qt.Key_V):
             print("V")
             if self.Button_Video.text() == 'Open Video':
-                self.timer.start(34)
+                self.timer.start(10)
                 self.Button_Video.setText('Close Video')
             else:
                 self.timer.stop()
@@ -235,14 +236,13 @@ class MyWindow(QMainWindow,Ui_client):
             pitch = round((self.drawpoint[1] - 135) / 100.0 * 20)
             yaw = round((self.drawpoint[0] - 585) / 100.0 * 20)
             self.label_point.setText(str((yaw, pitch)))
+            qp.end()
             if pitch !=self.slider_pitch.value():
                 self.slider_pitch.setValue(pitch)
             if yaw !=self.slider_yaw.value():
                 self.slider_yaw.setValue(yaw)
-            qp.end()
         except Exception as e:
             print(e)
-
 
     def mouseMoveEvent(self, event):
         x=event.pos().x()
@@ -284,7 +284,7 @@ class MyWindow(QMainWindow,Ui_client):
 
     def video(self):
         if self.Button_Video.text() == 'Open Video':
-            self.timer.start(34)
+            self.timer.start(10)
             self.Button_Video.setText('Close Video')
         else:
             self.timer.stop()
@@ -319,7 +319,8 @@ class MyWindow(QMainWindow,Ui_client):
                     self.client.tcp_flag=False
                     break
                 elif data[0]==cmd.CMD_SONIC:
-                    self.label_sonic.setText('Obstacle:'+data[1]+'cm')
+                    self.Button_Sonic.setText(data[1]+'cm')
+                    #self.label_sonic.setText('Obstacle:'+data[1]+'cm')
                     #print('Obstacle:',data[1])
                 elif data[0]==cmd.CMD_POWER:
                     if data[1]!="":
@@ -330,7 +331,6 @@ class MyWindow(QMainWindow,Ui_client):
                         self.Button_Relax.setText('Relax')
                     else:
                         self.Button_Relax.setText('"Too tired..."')
-
 
     def refresh_image(self):
         try:
@@ -553,8 +553,8 @@ class MyWindow(QMainWindow,Ui_client):
             target1.setText(str(target2.value()))
             self.drawpoint[0]=585+self.slider_yaw.value()*5
             self.drawpoint[1]=135+self.slider_pitch.value()*5
-            #self.update()
-            self.repaint()
+            self.update()
+            #self.repaint()
             #print(command)
         except Exception as e:
             print(e)
@@ -574,6 +574,115 @@ class MyWindow(QMainWindow,Ui_client):
         except Exception as e:
             print(e)
 
+    def showFaceWindow(self):
+        try:
+            self.faceWindow = faceWindow(self.client)
+            self.faceWindow.setWindowModality(Qt.ApplicationModal)
+            self.faceWindow.show()
+            self.client.face_id = True
+        except Exception as e:
+            print(e)
+
+class faceWindow(QMainWindow,Ui_Face):
+    def __init__(self,client):
+        super(faceWindow,self).__init__()
+        self.setupUi(self)
+        self.setWindowIcon(QIcon('Picture/logo_Mini.png'))
+        self.label_video.setScaledContents(True)
+        self.label_video.setPixmap(QPixmap('Picture/dog_client.png'))
+        self.Button_Read_Face.clicked.connect(self.readFace)
+        self.client = client
+        self.face_image=''
+        self.photoCount=0
+        self.timeout=0
+        self.name = ''
+        self.readFaceFlag=False
+        # Timer
+        self.timer1 = QTimer(self)
+        self.timer1.timeout.connect(self.faceDetection)
+        self.timer1.start(10)
+
+        self.timer2 = QTimer(self)
+        self.timer2.timeout.connect(self.facePhoto)
+
+    def closeEvent(self, event):
+        self.timer1.stop()
+        self.client.face_id = False
+    def readFace(self):
+        try:
+            if self.Button_Read_Face.text()=="Read Face":
+                self.Button_Read_Face.setText("Reading")
+                self.timer2.start(10)
+                self.timeout=time.time()
+            else:
+                self.timer2.stop()
+                if self.photoCount!=0:
+                    self.Button_Read_Face.setText("Waiting ")
+                    self.client.face.trainImage()
+                    QMessageBox.information(self, "Message", "success", QMessageBox.Yes)
+                self.Button_Read_Face.setText("Read Face")
+                self.name = self.lineEdit.setText("")
+                self.photoCount == 0
+        except Exception as e:
+            print(e)
+
+    def facePhoto(self):
+        try:
+            if self.photoCount==30:
+                self.photoCount==0
+                self.timer2.stop()
+                self.Button_Read_Face.setText("Waiting ")
+                self.client.face.trainImage()
+                QMessageBox.information(self, "Message", "success", QMessageBox.Yes)
+                self.Button_Read_Face.setText("Read Face")
+                self.name = self.lineEdit.setText("")
+            else:
+                if len(self.face_image)>0:
+                    self.name = self.lineEdit.text()
+                    if len(self.name) > 0:
+                        height, width= self.face_image.shape[:2]
+                        QImg = QImage(self.face_image.data.tobytes(), width, height,3 * width,QImage.Format_RGB888)
+                        self.label_photo.setPixmap(QPixmap.fromImage(QImg))
+                        second=int(time.time() - self.timeout)
+                        if second > 1:
+                            self.saveFcaePhoto()
+                            self.timeout=time.time()
+                        else:
+                            self.Button_Read_Face.setText("Reading "+str(1-second)+"S   "+str(self.photoCount)+"/30")
+                        self.face_image=''
+                    else:
+                        QMessageBox.information(self, "Message", "Please enter your name", QMessageBox.Yes)
+                        self.timer2.stop()
+                        self.Button_Read_Face.setText("Read Face")
+        except Exception as e:
+            print(e)
+
+    def saveFcaePhoto(self):
+        cv2.cvtColor(self.face_image, cv2.COLOR_BGR2RGB, self.face_image)
+        cv2.imwrite('Face/'+str(len(self.client.face.name))+'.jpg', self.face_image)
+        self.client.face.name.append([str(len(self.client.face.name)),str(self.name)])
+        self.client.face.Save_to_txt(self.client.face.name, 'Face/name')
+        self.client.face.name = self.client.face.Read_from_txt('Face/name')
+        self.photoCount += 1
+        self.Button_Read_Face.setText("Reading "+str(0)+" S "+str(self.photoCount)+"/30")
+
+    def faceDetection(self):
+        try:
+            if len(self.client.image)>0:
+                gray = cv2.cvtColor(self.client.image, cv2.COLOR_BGR2GRAY)
+                faces = self.client.face.detector.detectMultiScale(gray, 1.2, 5)
+                if len(faces) > 0:
+                    for (x, y, w, h) in faces:
+                        self.face_image = self.client.image[y-5:y + h+5, x-5:x + w+5]
+                        cv2.rectangle(self.client.image, (x-20, y-20), (x + w+20, y + h+20), (0, 255, 0), 2)
+                if self.client.video_flag == False:
+                    height, width, bytesPerComponent = self.client.image.shape
+                    cv2.cvtColor(self.client.image, cv2.COLOR_BGR2RGB, self.client.image)
+                    QImg = QImage(self.client.image.data.tobytes(), width, height, 3 * width, QImage.Format_RGB888)
+                    self.label_video.setPixmap(QPixmap.fromImage(QImg))
+                    self.client.video_flag = True
+        except Exception as e:
+            print(e)
 
 class calibrationWindow(QMainWindow,Ui_calibration):
     def __init__(self,client):
@@ -777,6 +886,7 @@ class ColorDialog(QtWidgets.QColorDialog):
             classname = children.metaObject().className()
             if classname not in ("QColorPicker", "QColorLuminancePicker"):
                 children.hide()
+
 class ledWindow(QMainWindow,Ui_led):
     def __init__(self,client):
         super(ledWindow,self).__init__()
@@ -817,6 +927,7 @@ class ledWindow(QMainWindow,Ui_led):
         command = cmd.CMD_LED_MOD + '#' + '0' + '\n'
         self.client.send_data(command)
         #print(command)
+
     def ledMode(self,index):
         if index.text() == "Mode 1":
             if index.isChecked() == True:

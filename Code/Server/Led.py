@@ -13,6 +13,7 @@ LED_CHANNEL    = 0       # set to '1' for GPIOs 13, 19, 41, 45 or 53
 class Led:
     def __init__(self):
         self.LedMod='1'
+        self.colour=[0,0,0]
         #Control the sending order of color data
         self.ORDER = "RGB"  
         # Create NeoPixel object with appropriate configuration.
@@ -86,7 +87,7 @@ class Led:
     def theaterChase(self,strip,data, wait_ms=50):
         for q in range(3):
             for i in range(0, self.strip.numPixels(), 3):
-                self.strip.setPixelColor(i+q,Color(int(data[2]),int(data[3]),int(data[4])))
+                self.strip.setPixelColor(i+q,Color(data[0],data[1],data[2]))
             self.strip.show()
             time.sleep(wait_ms/1000.0)
             for i in range(0, strip.numPixels(), 3):
@@ -102,25 +103,22 @@ class Led:
         oldMod=self.LedMod
         if len(data) <5:
             self.LedMod=data[1]
+        else:
+            for i in range(3):
+                self.colour[i]=int(data[i+2])
         if self.LedMod=='0':
             self.colorWipe(self.strip, Color(0,0,0))
             self.LedMod=oldMod
         elif self.LedMod=='1':
-            if len(data) ==5:
-                self.ledIndex(int(data[1]),int(data[2]),int(data[3]),int(data[4]))
-            else:
-                self.colorWipe(self.strip, Color(0,0,0))
+            self.ledIndex(255,self.colour[0],self.colour[1],self.colour[2])
         elif self.LedMod=='2':
             while True:
                 self.colorWipe(self.strip, Color(255, 0, 0))   #Red wipe
                 self.colorWipe(self.strip, Color(0, 255, 0))   #Green wipe
                 self.colorWipe(self.strip, Color(0, 0, 255))   #Blue wipe
         elif self.LedMod=='3':
-            if len(data) ==5:
-                while True:
-                    self.theaterChase(self.strip,data)
-            else:
-                self.colorWipe(self.strip, Color(0,0,0))
+            while True:
+                self.theaterChase(self.strip,self.colour)
         elif self.LedMod=='4':
             while True:
                 self.rainbow(self.strip)
@@ -128,10 +126,6 @@ class Led:
             while True:
                 self.rainbowCycle(self.strip)
 
-            
-         
-        
-                
 # Main program logic follows:
 if __name__ == '__main__':
     pass

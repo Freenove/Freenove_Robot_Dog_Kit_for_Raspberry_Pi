@@ -27,7 +27,7 @@ class Server:
         self.control=Control()
         self.sonic=Ultrasonic()
         self.control.Thread_conditiona.start()
-        self.battery_voltage=[8.4,8.4,8.4]
+        self.battery_voltage=[8.4,8.4,8.4,8.4,8.4]
     def get_interface_ip(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         return socket.inet_ntoa(fcntl.ioctl(s.fileno(),
@@ -107,9 +107,8 @@ class Server:
             
     def measuring_voltage(self,connect):
         try:
-            self.battery_voltage[0]=round(self.adc.power(0),2)
-            self.battery_voltage[1]=round(self.adc.power(0),2)
-            self.battery_voltage[2]=round(self.adc.power(0),2)
+            for i in range(5):
+                self.battery_voltage[i]=round(self.adc.power(0),2)
             command=cmd.CMD_POWER+'#'+str(max(self.battery_voltage))+"\n"
             self.send_data(connect,command)
             self.sednRelaxFlag()
@@ -209,7 +208,9 @@ class Server:
         except:
             pass
         print("close_recv")
+        self.control.relax_flag=False
         self.control.order[0]=cmd.CMD_RELAX
+        
 
 if __name__ == '__main__':
     pass

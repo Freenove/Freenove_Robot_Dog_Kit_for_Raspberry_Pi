@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
 import io
-import cv2
-import sys
 import copy
 import socket
 import struct
 import threading
 from PID import *
+from Face import *
 import numpy as np
 from Thread import *
 from PIL import Image
@@ -14,12 +13,13 @@ from Command import COMMAND as cmd
 
 class Client:
     def __init__(self):
-        self.face_cascade = cv2.CascadeClassifier(r'haarcascade_frontalface_default.xml')
+        self.face = Face()
         self.pid=Incremental_PID(1,0,0.0025)
         self.tcp_flag=False
         self.video_flag=True
         self.ball_flag=False
         self.face_flag=False
+        self.face_id = False
         self.image=''
     def turn_on_client(self,ip):
         self.client_socket1 = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -68,7 +68,6 @@ class Client:
         if center != None:
             cv2.circle(self.image, center, int(radius), (0, 255, 0))
             D=round(2700/(2*radius))  #CM
-            #print ("x:"+str(center[0])+" y:"+str(center[1])+" r:"+str(round(radius))+" D:"+str(round(D)))
             x=self.pid.PID_compute(center[0])
             d=self.pid.PID_compute(D)
             if radius>15:
@@ -97,16 +96,6 @@ class Client:
             command=cmd.CMD_MOVE_STOP+"#"+self.move_speed+'\n'
             self.send_data(command)
             #print (command)
-
-    def face_detect(self, img):
-        if sys.platform.startswith('win') or sys.platform.startswith('darwin'):
-            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-            faces = self.face_cascade.detectMultiScale(gray, 1.3, 5)
-            if len(faces) > 0:
-                for (x, y, w, h) in faces:
-                    self.face_x = float(x + w / 2.0)
-                    self.face_y = float(y + h / 2.0)
-                    self.image = cv2.circle(self.image, (int(self.face_x), int(self.face_y)), int((w + h) / 4), (0, 255, 0), 2)
     def receiving_video(self,ip):
         stream_bytes = b' '
         try:
@@ -123,10 +112,10 @@ class Client:
                 if self.is_valid_image_4_bytes(jpg):
                     if self.video_flag:
                         self.image = cv2.imdecode(np.frombuffer(jpg, dtype=np.uint8), cv2.IMREAD_COLOR)
-                        if self.ball_flag:
+                        if self.ball_flag and self.face_id==False:
                            self.Looking_for_the_ball()
-                        elif self.face_flag:
-                            self.face_detect(self.image)
+                        elif self.face_flag and self.face_id==False:
+                            self.face.face_detect(self.image)
                         self.video_flag=False
             except BaseException as e:
                 print (e)
