@@ -3,7 +3,7 @@ import sys
 import time
 flag=0x00
 for x in range(1,4):
-    if os.system("python3 -m pip install --upgrade pip") == 0:
+    if os.system("python3 -m pip install --upgrade pip --user") == 0:
         flag=flag | 0x01
         break
 for x in range(1,4):
@@ -16,8 +16,9 @@ for x in range(1,4):
         break
 for x in range(1,4):
     if os.system("pip3 install opencv-python-headless") == 0:
-        flag=flag | 0x08
-        break
+        if os.system("pip3 install opencv-contrib-python-headless") == 0:
+            flag=flag | 0x08
+            break
 for x in range(1,4):
     if os.system("pip3 install numpy") == 0:
         flag=flag | 0x10
