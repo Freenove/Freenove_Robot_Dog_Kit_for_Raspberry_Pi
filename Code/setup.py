@@ -24,16 +24,16 @@ for x in range(1,4):
 	if os.system("sudo apt-get install -y libqtgui4 python3-dev libqt4-test python3-pyqt5 ") == 0:
 		flag=flag | 0x10
 		break
-for x in range(1,4):
+'''for x in range(1,4):
 	if os.system("sudo apt-get install -y libopencv-dev python3-opencv") == 0:
 		if os.system("sudo pip3 install opencv-contrib-python==3.4.6.27") == 0:
 			flag=flag | 0x20
-			break
+			break'''
 for x in range(1,4):
 	if os.system("sudo apt-get install -y libatlas-base-dev libjasper-dev") == 0:
-		flag=flag | 0x40
+		flag=flag | 0x20
 		break
-if flag==0x7F:
+if flag==0x3F:
         print("\nNow the installation is successful.")
         print("\nPlease restart raspberry pi")
 else:
