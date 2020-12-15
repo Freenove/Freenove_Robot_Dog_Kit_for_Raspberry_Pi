@@ -8,8 +8,13 @@ class Servo:
     #Convert the input angle to the value of pca9685
     def map(self,value,fromLow,fromHigh,toLow,toHigh):
         return (toHigh-toLow)*(value-fromLow) / (fromHigh-fromLow) + toLow
-    def setServoAngle(self,channel, angle):  
-        date=self.map(angle,0,180,143,471)
+    def setServoAngle(self,channel, angle):
+        if angle < 18:
+            angle = 18
+        elif angle >162:
+            angle=162
+        date=self.map(angle,18,162,143,471)
+        print(date,date/4096*0.02)
         self.pwm.set_pwm(channel, 0, int(date))
  
 # Main program logic follows:
