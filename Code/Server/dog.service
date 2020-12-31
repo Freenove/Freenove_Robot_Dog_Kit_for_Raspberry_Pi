@@ -1,0 +1,13 @@
+[Unit]
+Description=Robot Dog Auto Start
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/merlin/Freenova/Freenove_Robot_Dog_Kit_for_Raspberry_Pi/Code/Server/
+ExecStart=/home/merlin/Freenova/Freenove_Robot_Dog_Kit_for_Raspberry_Pi/Code/Server/standalone.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

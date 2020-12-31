@@ -36,7 +36,7 @@ class Server:
                                             )[20:24])
     def turn_on_server(self):
         #ip adress
-        HOST=self.get_interface_ip()
+        HOST="0.0.0.0"
         #Port 8000 for video transmission
         self.server_socket = socket.socket()
         self.server_socket.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEPORT,1)
@@ -48,7 +48,7 @@ class Server:
         self.server_socket1.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEPORT,1)
         self.server_socket1.bind((HOST, 5001))
         self.server_socket1.listen(1)
-        print('Server address: '+HOST)
+        print('Server address: ' + self.get_interface_ip())
         
     def turn_off_server(self):
         try:
