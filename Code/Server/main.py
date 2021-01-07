@@ -18,6 +18,7 @@ class MyWindow(QMainWindow,Ui_server):
             super(MyWindow,self).__init__()
             self.setupUi(self)
             self.pushButton_On_And_Off.clicked.connect(self.on_and_off_server)
+            self.on_and_off_server()
         if self.start_tcp:
             self.server.turn_on_server()
             self.server.tcp_flag=True
