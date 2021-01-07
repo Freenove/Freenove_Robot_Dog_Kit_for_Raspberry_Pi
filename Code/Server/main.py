@@ -83,7 +83,6 @@ if __name__ == '__main__':
         sys.exit(myshow.app.exec_())
     else:
         try:
-            while(1):
-                pass
+            pass
         except KeyboardInterrupt:
             myshow.closeEvent(myshow)
