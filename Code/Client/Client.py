@@ -47,7 +47,7 @@ class Client:
     def Looking_for_the_ball(self):
         MIN_RADIUS=10
         #red
-        THRESHOLD_LOW = (0, 140, 140)
+        THRESHOLD_LOW = (0, 200, 200)
         THRESHOLD_HIGH = (5,255,255)
 
         img_filter = cv2.GaussianBlur(self.image.copy(), (3, 3), 0)
