@@ -12,7 +12,7 @@ for x in range(1,4):
         flag=flag | 0x02
         break
 for x in range(1,4):
-    if os.system("sudo apt-get install -y libqtgui4 python3-dev libqt4-test python3-pyqt5 ") == 0:
+    if os.system("sudo apt-get install -y libqt5gui5 python3-dev python3-pyqt5 ") == 0:
         flag=flag | 0x04
         break
 for x in range(1,4):
