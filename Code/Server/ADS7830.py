@@ -19,7 +19,7 @@ class ADS7830:
 		for i in range(9):
 			data[i]=self.readAdc(channel)
 		data.sort()
-		battery_voltage=data[4]/255.0*5.0*3
+		battery_voltage=data[4]/255.0*5.0*2
 		return battery_voltage
 if __name__ == '__main__':
 	a=ADS7830()
