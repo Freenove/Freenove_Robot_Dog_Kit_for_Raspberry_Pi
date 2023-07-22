@@ -75,7 +75,7 @@ adc=ADS7830()
 def test_Adc():
     try:
         while True:
-            Power=adc.readAdc(0)/255.0*5.0*3
+            Power=adc.readAdc(0)/255.0*5.0*2
             print ("The battery voltage is "+str(Power)+"V")
             time.sleep(1)
             print ('\n')
