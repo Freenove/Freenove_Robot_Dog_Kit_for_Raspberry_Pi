@@ -125,7 +125,7 @@ class Server:
             print(e)
             
     def battery_reminder(self):
-        if max(self.battery_voltage) < -6.4:
+        if max(self.battery_voltage) < 6.4:
             self.turn_off_server()
             self.control.relax(True)
             print("The batteries power are too low. Please recharge the batteries or replace batteries.")
