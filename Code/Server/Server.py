@@ -118,6 +118,7 @@ class Server:
             for i in range(5):
                 self.battery_voltage[i]=round(self.adc.power(0),2)
             command=cmd.CMD_POWER+'#'+str(max(self.battery_voltage))+"\n"
+            print(command)
             self.send_data(connect,command)
             self.sednRelaxFlag()
             self.battery_reminder()
@@ -194,8 +195,8 @@ class Server:
                     self.measuring_voltage(self.connection1)
                 elif cmd.CMD_WORKING_TIME in data: 
                     if self.control.move_timeout!=0 and self.control.relax_flag==True:
-                        if self.control.move_count >180:
-                            command=cmd.CMD_WORKING_TIME+'#'+str(180)+'#'+str(round(self.control.move_count-180))+"\n"
+                        if self.control.move_count > self.control.run_time_limit:
+                            command=cmd.CMD_WORKING_TIME+'#'+str(self.control.run_time_limit)+'#'+str(round(self.control.move_count-self.control.run_time_limit))+"\n"
                         else:
                             if self.control.move_count==0:
                                 command=cmd.CMD_WORKING_TIME+'#'+str(round(self.control.move_count))+'#'+str(round((time.time()-self.control.move_timeout)+60))+"\n"
