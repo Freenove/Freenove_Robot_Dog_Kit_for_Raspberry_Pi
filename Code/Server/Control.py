@@ -12,6 +12,8 @@ from Command import COMMAND as cmd
 
 class Control:
     def __init__(self):
+        self.run_time_limit = 600
+        self.relax_time_limit = 60
         self.imu=IMU()
         self.servo=Servo()
         self.pid = Incremental_PID(0.5,0.0,0.0025)
@@ -129,10 +131,10 @@ class Control:
     def condition(self):
         while True:
             try:
-                if time.time()-self.move_timeout > 60 and self.move_timeout!=0 and self.relax_flag==True:
+                if time.time()-self.move_timeout > self.relax_time_limit and self.move_timeout!=0 and self.relax_flag==True:
                     self.move_count=0
                     self.move_timeout=time.time()
-                if self.move_count < 180:
+                if self.move_count < self.run_time_limit:
                     if (time.time()-self.timeout)>10 and self.timeout!=0 and self.relax_flag==False and self.order[0] == '':
                         self.timeout=time.time()
                         self.relax_flag=True
@@ -141,7 +143,7 @@ class Control:
                     if self.relax_flag==True and self.order[0] != ''  and self.order[0] !=cmd.CMD_RELAX: 
                         self.relax(False)
                         self.relax_flag=False
-                    if self.attitude_flag==True and self.order[0] !=cmd.CMD_ATTITUDE and self.order[0] != '':
+                    if self.attitude_flag==True and self.order[0] != cmd.CMD_ATTITUDE and self.order[0] != '':
                         self.stop()   
                         self.attitude_flag=False  
                     if self.relax_flag==False: 
@@ -218,12 +220,12 @@ class Control:
                         Thread_IMU=threading.Thread(target=self.IMU6050())
                         Thread_IMU.start()
                         break
-                elif self.move_count > 180 :
+                elif self.move_count > self.run_time_limit :
                     self.relax_flag=True
                     self.relax(True)
                     if self.move_flag!=1:
                         self.move_flag=1
-                    if  self.move_count > 240:
+                    if  self.move_count > (self.run_time_limit+self.relax_time_limit):
                         self.move_count=0
                         self.move_flag=0
                     self.order=['','','','','']
@@ -413,7 +415,7 @@ class Control:
             p=self.pid.PID_compute(p)
             pos=self.postureBalance(r,p,0)
             self.changeCoordinates('Attitude Angle',pos=pos)
-            if  (self.order[0]==cmd.CMD_BALANCE and self.order[1]=='0')or(self.balance_flag==True and self.order[0]!='')or(self.move_count>180):
+            if  (self.order[0]==cmd.CMD_BALANCE and self.order[1]=='0')or(self.balance_flag==True and self.order[0]!='')or(self.move_count>self.run_time_limit):
                 Thread_conditiona=threading.Thread(target=self.condition)
                 Thread_conditiona.start()
                 self.balance_flag==False
