@@ -12,8 +12,9 @@ from Command import COMMAND as cmd
 
 class Control:
     def __init__(self):
-        self.run_time_limit = 600
-        self.relax_time_limit = 60
+        self.run_time_limit = 600        # Limit the running time of the robot dog, beyond which it needs to rest mode for 60 seconds
+        self.relax_max_time_limit = 60   # Set the maximum amount of time the robot dog is forced to rest mode
+        self.relax_min_time_limit = 10   # Set the time when the robot dog enters the rest mode when there is no operation
         self.imu=IMU()
         self.servo=Servo()
         self.pid = Incremental_PID(0.5,0.0,0.0025)
@@ -131,11 +132,11 @@ class Control:
     def condition(self):
         while True:
             try:
-                if time.time()-self.move_timeout > self.relax_time_limit and self.move_timeout!=0 and self.relax_flag==True:
+                if time.time()-self.move_timeout > self.relax_max_time_limit and self.move_timeout!=0 and self.relax_flag==True:
                     self.move_count=0
                     self.move_timeout=time.time()
                 if self.move_count < self.run_time_limit:
-                    if (time.time()-self.timeout)>10 and self.timeout!=0 and self.relax_flag==False and self.order[0] == '':
+                    if (time.time()-self.timeout)>self.relax_min_time_limit and self.timeout!=0 and self.relax_flag==False and self.order[0] == '':
                         self.timeout=time.time()
                         self.relax_flag=True
                         self.relax(True)
@@ -225,7 +226,7 @@ class Control:
                     self.relax(True)
                     if self.move_flag!=1:
                         self.move_flag=1
-                    if  self.move_count > (self.run_time_limit+self.relax_time_limit):
+                    if  self.move_count > (self.run_time_limit+self.relax_max_time_limit):
                         self.move_count=0
                         self.move_flag=0
                     self.order=['','','','','']
