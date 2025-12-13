@@ -427,28 +427,28 @@ class Control:
         l = 136
         if h!=0:
             h=self.height
-        pos = np.mat([0.0,  0.0,  h ]).T 
+        pos = np.asmatrix([0.0,  0.0,  h ]).T
         rpy = np.array([r,  p,  y]) * math.pi / 180 
         R, P, Y = rpy[0], rpy[1], rpy[2]
-        rotx = np.mat([[ 1,       0,            0          ],
+        rotx = np.asmatrix([[ 1,       0,            0          ],
                      [ 0,       math.cos(R), -math.sin(R)],
                      [ 0,       math.sin(R),  math.cos(R)]])
-        roty = np.mat([[ math.cos(P),  0,      -math.sin(P)],
+        roty = np.asmatrix([[ math.cos(P),  0,      -math.sin(P)],
                      [ 0,            1,       0          ],
                      [ math.sin(P),  0,       math.cos(P)]]) 
-        rotz = np.mat([[ math.cos(Y), -math.sin(Y),  0     ],
+        rotz = np.asmatrix([[ math.cos(Y), -math.sin(Y),  0     ],
                      [ math.sin(Y),  math.cos(Y),  0     ],
                      [ 0,            0,            1     ]])
         rot_mat = rotx * roty * rotz
-        body_struc = np.mat([[ l / 2,  b / 2,  0],
+        body_struc = np.asmatrix([[ l / 2,  b / 2,  0],
                            [ l / 2, -b / 2,    0],
                            [-l / 2,  b / 2,    0],
                            [-l / 2, -b / 2,    0]]).T
-        footpoint_struc = np.mat([[(l / 2),  (w / 2)+10,  self.height-h],
+        footpoint_struc = np.asmatrix([[(l / 2),  (w / 2)+10,  self.height-h],
                                 [ (l / 2), (-w / 2)-10,    self.height-h],
                                 [(-l / 2),  (w / 2)+10,    self.height-h],
                                 [(-l / 2), (-w / 2)-10,    self.height-h]]).T
-        AB = np.mat(np.zeros((3, 4)))
+        AB = np.asmatrix(np.zeros((3, 4)))
         for i in range(4):
             AB[:, i] = pos + rot_mat * footpoint_struc[:, i] - body_struc[:, i]
         return (AB)
